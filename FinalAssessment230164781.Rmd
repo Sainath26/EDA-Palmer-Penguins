@@ -1,0 +1,130 @@
+---
+title: "palmer Penguins Analysis"
+author: "Harish Sainath Sai Prasath (230164781)"
+output: pdf_document
+---
+# Introduction
+```{r setup, include=FALSE}
+#Importing libraries and creating a subset
+knitr::opts_chunk$set(echo = TRUE)
+library(palmerpenguins)
+library(ggplot2)
+library(dplyr)
+library(grid)
+my.student.number = 230164781
+n=200
+data("penguins")
+penguins = na.omit(penguins)
+set.seed(my.student.number)
+my.penguins = penguins[sample(nrow(penguins), n), ]
+```
+In this report, we aim to analyse a subset of the famous *Palmer Penguins* data set. The subset data used for analysis has `r n` entries and `r ncol(my.penguins)` different variables describing the penguins. These variables are *`r colnames(my.penguins)` *. Before diving deep into the data, let's try to get a better understanding about the penguins given in the data set by exploring all the variables, one at a time.
+
+### Species and Islands:
+- There are `r length(unique(my.penguins$island))` different islands and these are *`r unique(my.penguins$island)`*.
+- We can observe from the below plot that, Biscoe is the most populated island followed by Dream and Torgersen. 
+- There are `r length(unique(my.penguins$species))` species of penguins and they are *`r unique(my.penguins$species)`* respectively.
+- Population of each species in these island is given in the below plot.
+
+
+```{r echo=FALSE, fig.height=3}
+
+my.penguins %>% 
+  count(island, species) %>% 
+  ggplot(aes(x = island, y = n, fill = species)) + 
+  geom_col() + 
+  geom_text(aes(label = n), 
+            position = position_stack(vjust = 0.5), 
+            color = "white") + 
+  labs(title = "Penguin Population by Species and Island", 
+       x = "Island", 
+       y = "Population", 
+       fill = "Species") + 
+  theme_minimal() + 
+  theme(legend.position = "bottom")
+
+```
+
+### Bill Length, Bill Depth, Flipper Length and Body Mass:
+- To get an idea about the features of penguins, we will consider median as a the measure of central tendency because it is not affected if the data is skewed.
+- The penguins have a median bill length of *`r median(my.penguins$bill_length_mm)` mm*.
+- From the below box plots we can observe that Chinstrap Penguins has the highest median Bill length. This is closely followed by Gentoo penguins.
+- Apart from the median bill lengths, a few interesting points can also be observed. Adelie is the most common type of penguin that is present in all three islands. Chinstrap is present only in Dream island, and Gentoo is present only present in Biscoe island.
+- All penguins have a median bill depth of *`r median(my.penguins$bill_depth_mm)` mm*. Median bill depth for each species can be observed from the below box plots.
+- Gentoo Penguins have the highest median flipper length and Adelie has the overall lowest median flipper length.
+- The penguins have a median body mass of *`r median(my.penguins$body_mass_g)` g*.
+- Gentoo penguins are the heaviest penguins in the dataset. Adelie penguins are the the least heavy of the group and chinstrap penguins are comparable to Adelie as per body mass is concerned.
+
+```{r echo=FALSE,Include=FALSE, figures-side, fig.show="hold", out.width="50%" }
+my.penguins %>% 
+  ggplot(aes(x = island, y = bill_length_mm, color = species)) + 
+  geom_boxplot() +
+  stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
+               position = position_nudge(x = 0)) + 
+  labs(title = "Bill Length Distribution by Species and Island", 
+       x = "Island", 
+       y = "Bill Length in millimeters", 
+       color = "Species") + 
+  theme_minimal()+
+  theme(legend.position = "none")
+
+my.penguins %>% 
+  ggplot(aes(x = island, y = flipper_length_mm, color = species)) + 
+  geom_boxplot() +
+  stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
+               position = position_nudge(x = 0)) + 
+  labs(title = "Flipper Length Distribution by Species and Island", 
+       x = "Island", 
+       y = "Flipper Length in millimeters", 
+       color = "Species") + 
+  theme_minimal()
+
+
+```
+
+
+```{r echo=FALSE, figures-side2, fig.show="hold", out.width="50%"}
+ my.penguins %>% 
+  ggplot(aes(x = island, y = bill_depth_mm, color = species)) + 
+  geom_boxplot() +
+  stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
+               position = position_dodge(width = 0.75)) + 
+  labs(title = "Bill Depth Distribution by Species and Island", 
+       x = "Island", 
+       y = "Bill Depth in grams", 
+       color = "Species" ) + 
+  theme_minimal()+
+  theme(legend.position = "none")
+
+my.penguins %>% 
+  ggplot(aes(x = island, y = body_mass_g, color = species)) + 
+  geom_boxplot() +
+  stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
+               position = position_dodge(width = 0.75)) + 
+  labs(title = "Body Mass Distribution by Species and Island", 
+       x = "Island", 
+       y = "Body Mass in grams", 
+       color = "Species") + 
+  theme_minimal()
+
+```
+
+### Year and Sex  : 
+- The data is collected for `r length(unique(my.penguins$year))` years and these are *`r unique(my.penguins$year)`* respectively. There are `r my.penguins%>%summarise(totalFemales = sum(sex == "female"))` female penguins and `r my.penguins%>%summarise(totalMales = sum(sex == "male"))` male penguins in the dataset.
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
