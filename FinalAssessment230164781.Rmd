@@ -1,5 +1,5 @@
 ---
-title: "palmer Penguins Analysis"
+title: "Palmer Penguins Analysis"
 author: "Harish Sainath Sai Prasath (230164781)"
 output: pdf_document
 ---
@@ -11,12 +11,15 @@ library(palmerpenguins)
 library(ggplot2)
 library(dplyr)
 library(grid)
+library(MASS)
 my.student.number = 230164781
 n=200
 data("penguins")
 penguins = na.omit(penguins)
 set.seed(my.student.number)
 my.penguins = penguins[sample(nrow(penguins), n), ]
+rm(penguins_raw)
+rm(penguins)
 ```
 In this report, we aim to analyse a subset of the famous *Palmer Penguins* data set. The subset data used for analysis has `r n` entries and `r ncol(my.penguins)` different variables describing the penguins. These variables are *`r colnames(my.penguins)` *. Before diving deep into the data, let's try to get a better understanding about the penguins given in the data set by exploring all the variables, one at a time.
 
@@ -112,9 +115,113 @@ my.penguins %>%
 ### Year and Sex  : 
 - The data is collected for `r length(unique(my.penguins$year))` years and these are *`r unique(my.penguins$year)`* respectively. There are `r my.penguins%>%summarise(totalFemales = sum(sex == "female"))` female penguins and `r my.penguins%>%summarise(totalMales = sum(sex == "male"))` male penguins in the dataset.
 
+# Distribution Fitting and Population Proportion Estimation
+
+Let's take one Body mass of penguins and fit a distribution for proportion estimation. For getting initial impressions of how the data is distributed, let's plot a density plot. Also a lot of things in nature are observed to be falling under a normal distribution. So Let's use a q-q plot to check if body mass can be fitted using a Normal/Gaussian distribution. 
+
+```{r echo=FALSE, Distribution_Check,fig.show="hold", out.width="50%"}
+options(scipen = 999)
+
+ggplot(data = my.penguins, aes(x = body_mass_g)) +
+  geom_density(fill = "red", alpha = 0.7, color = "black") +  # Plot density
+  labs(title = "Density of Body Mass of penguins",
+       x = "Body Mass (grams)",
+       y = "Density") +
+  theme_minimal()
+
+qqnorm(my.penguins$body_mass_g)
+qqline(my.penguins$body_mass_g,col="red")
+```
+
+Two major things can be observed the above plots.
+
+- q-q plot shows that fitting a normal distribution might not be the best choice for good parameter estimations.
+- Distribution of body mass seems to right skewed.
+
+Now we have to look for some other distribution to fit the data. The body mass is a positive value and the data is right skewed, *LogNormal Distribution* might be a good choice to fit the data.
+
+so let's fit LogNormal Distribution to our data. 
+
+### Fitting the Data to a LogNormal Distribution
+
+Probability density function for a LogNormal distribution is given by
+\begin{align*}
+f(x) = \frac{1}{x \sigma\sqrt{2 \pi}} e^{\left[ - \frac{(ln(x) - \mu)^2}{2 \sigma^2} \right]}
+   \end{align*}
+- $\mu$ is the mean of the normal distribution.
+- $\sigma$ is the standard deviation of the normal distribution.
+- $n$ is equal to 200 in our case.
+
+Likelihood function:
+
+\begin{align*}
+L(\mu, \sigma | x) = \sum_{i=1}^{n} \ln(f(x_i | \mu, \sigma))
+   \end{align*}
+   
+Log Likelihood function:
+\begin{align*}
+L(\mu, \sigma | x_n) = \sum_{i=1}^{n} \left( - \ln(x_i \sigma \sqrt{2 \pi}) - \frac{(\ln(x_i) - \mu)^2}{2 \sigma^2} \right)\\
+L(\mu, \sigma | x_n) = -n \ln(\sigma) - n \ln(\sqrt{2 \pi}) - \sum_{i=1}^{n} \ln(x_i) - \frac{1}{2\sigma^2} \sum_{i=1}^{n} (\ln(x_i) - \mu)^2
+\end{align*}
+
+Now using Partial differentiation we find equations for $\mu$ and $\sigma$.
+
+- To estimate parameter $\mu$ (Mean) we differentiate the log-likelihood with respect to $\mu$
+\begin{align*}
+\frac{\partial L}{\partial \mu} = \frac{1}{\sigma^2} \sum_{i=1}^{n} (\ln(x_i) - \mu)=0\\
+\text{Solving this equation we get,}\\
+\text{mean: } & \hat{\mu} = \frac{1}{n} \sum_{i=1}^{n} \ln(x_i)
+\end{align*}
+-  To estimate parameter for $\sigma^2$ (Variance) we differentiate the log-likelihood with respect to $\sigma^2$
+\begin{align*}
+\frac{\partial L}{\partial \sigma} = -\frac{n}{\sigma} + \frac{1}{\sigma^3} \sum_{i=1}^{n} (\ln(x_i) - \mu)^2=0\\
+\text{by solving this equation, we get}\\
+\hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^{n} (\ln(x_i) - \hat \mu)^2\\
+\text{Standard deviation: } & \hat{\sigma}= \sqrt{\frac{1}{n} \sum_{i=1}^{n} (\ln(x_i) - \hat{\mu})^{2}}\\
+\end{align*}
 
 
- 
+
+```{r echo=FALSE}
+body_mass = my.penguins$body_mass_g
+
+# Log-transform the body mass
+log_body_mass = log(body_mass)
+
+# Fit a normal distribution to the log-transformed data
+log_fit = fitdistr(log_body_mass, "normal")
+mu = log_fit$estimate[1]  # Mean of log body mass
+sigma = log_fit$estimate[2]  # Standard deviation of log body mass
+
+# Create a sequence of x values for plotting the fitted curve
+x_vals = seq(min(body_mass), max(body_mass), length.out = 100)
+
+# Get the log-normal density curve for these x values
+log_normal_density = dlnorm(x_vals, meanlog = mu, sdlog = sigma)
+
+# Combine x_vals and log_normal_density into a data frame for ggplot
+density_data = data.frame(x_vals = x_vals, log_normal_density = log_normal_density)
+
+ggplot(data.frame(body_mass), aes(x = body_mass)) +
+  geom_density(aes(y = after_stat(density)), fill = "steelblue", color = "black") +
+  geom_line(data = density_data, aes(x = x_vals, y = log_normal_density), color = "red", linewidth = 1) +
+  labs(title = "Body Mass Distribution with Fitted Log-Normal Curve",
+       x = "Body Mass (g)", y = "Density") +
+  theme_minimal()
+
+```
+
+## Limitations of this Model: 
+- While this LogNormal represents skewness, it still does not match the actual data. But this is far better than Normal distribution where skewness is zero.
+
+
+
+
+
+
+
+
+
 
 
 
