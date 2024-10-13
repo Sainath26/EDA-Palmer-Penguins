@@ -138,99 +138,140 @@ Two major things can be observed the above plots.
 - q-q plot shows that fitting a normal distribution might not be the best choice for good parameter estimations.
 - Distribution of body mass seems to right skewed.
 
-Now we have to look for some other distribution to fit the data. The body mass is a positive value and the data is right skewed, *LogNormal Distribution* might be a good choice to fit the data.
+Now we have to look for some other distribution to fit the data. The body mass is a positive value and the data is right skewed, *Log-Normal Distribution* might be a good choice to fit the data.
 
-so let's fit LogNormal Distribution to our data. 
+so let's fit Log-Normal Distribution to our data. 
 
-### Fitting the Data to a LogNormal Distribution
-
-Probability density function for a LogNormal distribution is given by
+### Fitting the Data to a Log-Normal Distribution
+Probability density function for a Log-Normal distribution is given by
 \begin{align*}
 f(x) = \frac{1}{x \sigma\sqrt{2 \pi}} e^{\left[ - \frac{(ln(x) - \mu)^2}{2 \sigma^2} \right]}
    \end{align*}
-- $\mu$ is the mean of the normal distribution.
-- $\sigma$ is the standard deviation of the normal distribution.
+   
+- $\mu$ is the mean of the normal distribution. 
+- $\sigma$ is the standard deviation of the normal distribution. 
 - $n$ is equal to 200 in our case.
 
 Likelihood function:
-
 \begin{align*}
-L(\mu, \sigma | x) = \sum_{i=1}^{n} \ln(f(x_i | \mu, \sigma))
-   \end{align*}
-   
-Log Likelihood function:
-\begin{align*}
-L(\mu, \sigma | x_n) = \sum_{i=1}^{n} \left( - \ln(x_i \sigma \sqrt{2 \pi}) - \frac{(\ln(x_i) - \mu)^2}{2 \sigma^2} \right)\\
-L(\mu, \sigma | x_n) = -n \ln(\sigma) - n \ln(\sqrt{2 \pi}) - \sum_{i=1}^{n} \ln(x_i) - \frac{1}{2\sigma^2} \sum_{i=1}^{n} (\ln(x_i) - \mu)^2
+L(\mu, \sigma | x_n) &= \prod_{i=1}^{n} \left[\frac{1}{\sqrt{2\pi}\sigma x_{i}}e^{-\frac{1}{2\sigma^{2}}(lnx_{i}-\mu)^{2}}\right] \\
 \end{align*}
+Rearranging the above equation to make the calculations convenient
+\begin{align*}
+L(\mu, \sigma | x_n) &= \frac{1}{(2\pi)^{\frac{n}{2}}\frac{1}{(\sigma^{2})^{\frac{n}{2}}}}\prod_{i=1}^{n} \left[(\frac{1}{x_{i}})e^{-\frac{1}{2\sigma^{2}}\Sigma(lnx_{i}-\mu)^{2}}\right] \\
+\text{taking ln on both sides }\\
+\ln L(\mu, \sigma^{2} | x_n) &= \ln 1 - \frac{n}{2}\ln\pi + \ln 1 - \frac{n}{2}\ln\sigma^{2} + \ln(x_{1}.x_{2}....x_{n}) - \frac{1}{2\sigma^{2}}\Sigma(lnx_{i}-\mu)^{2}\ln e \\\\
+\ln L(\mu,\sigma^{2}| x_n) &= -\frac{n}{2}\ln\pi-\frac{n}{2}\ln~\sigma^{2}+\sum ln x_{i}-\frac{1}{2\sigma^{2}}\sum(ln x_{i}-\mu)^{2} & ...(1)
+\end{align*}
+   
+Where (1) is the log likelihood function
 
-Now using Partial differentiation we find equations for $\mu$ and $\sigma$.
+Now partially differentiating (1) we find equations for $\mu$ and $\sigma$.
 
 - To estimate parameter $\mu$ (Mean) we differentiate the log-likelihood with respect to $\mu$
 \begin{align*}
-\frac{\partial L}{\partial \mu} = \frac{1}{\sigma^2} \sum_{i=1}^{n} (\ln(x_i) - \mu)=0\\
+\frac{\partial}{\partial \mu} lnL(\mu, \sigma^2|x_n) = \frac{1}{\sigma^2} \sum_{i=1}^{n} (ln(x_i) - \mu)\\
+\frac{\partial}{\partial \mu} lnL(\mu, \sigma^2) = 0\\
 \text{Solving this equation we get,}\\
 \text{mean: } & \hat{\mu} = \frac{1}{n} \sum_{i=1}^{n} \ln(x_i)
 \end{align*}
--  To estimate parameter for $\sigma^2$ (Variance) we differentiate the log-likelihood with respect to $\sigma^2$
+-To estimate parameter for $\sigma^2$ (Variance) we differentiate the log-likelihood with respect to $\sigma^2$
 \begin{align*}
-\frac{\partial L}{\partial \sigma} = -\frac{n}{\sigma} + \frac{1}{\sigma^3} \sum_{i=1}^{n} (\ln(x_i) - \mu)^2=0\\
+\frac{\partial}{\partial \sigma^2} lnL(\mu, \sigma^2 |x_n) = -\frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \sum_{i=1}^{n} (ln(x_i) - \mu)^2\\
 \text{by solving this equation, we get}\\
 \hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^{n} (\ln(x_i) - \hat \mu)^2\\
 \text{Standard deviation: } & \hat{\sigma}= \sqrt{\frac{1}{n} \sum_{i=1}^{n} (\ln(x_i) - \hat{\mu})^{2}}\\
 \end{align*}
 
+```{r echo=FALSE, Distribution_fit,fig.show="hold", out.width="50%"}
+body_mass = my.penguins$body_mass_g  # Original data
 
-
-```{r echo=FALSE}
-body_mass = my.penguins$body_mass_g
-
-# Log-transform the body mass
+# Step 1: Log-transform the body mass
 log_body_mass = log(body_mass)
 
-# Fit a normal distribution to the log-transformed data
-log_fit = fitdistr(log_body_mass, "normal")
-mu = log_fit$estimate[1]  # Mean of log body mass
-sigma = log_fit$estimate[2]  # Standard deviation of log body mass
+# Step 2: Compute MLE for mu (mean of the log-transformed data)
+n = length(log_body_mass)  # Number of observations
+mu_mle = sum(log_body_mass) / n  # MLE for mu
 
-# Create a sequence of x values for plotting the fitted curve
+# Step 3: Compute MLE for sigma^2 (variance of the log-transformed data)
+sigma2_mle = sum((log_body_mass - mu_mle)^2) / n  # MLE for sigma^2
+sigma_mle = sqrt(sigma2_mle)  # Standard deviation (square root of variance)
+
+# Step 4: Create a sequence of x values for plotting the fitted curve
 x_vals = seq(min(body_mass), max(body_mass), length.out = 100)
 
-# Get the log-normal density curve for these x values
-log_normal_density = dlnorm(x_vals, meanlog = mu, sdlog = sigma)
+# Step 5: Get the log-normal density curve using MLE mu and sigma
+log_normal_density = dlnorm(x_vals, meanlog = mu_mle, sdlog = sigma_mle)
 
-# Combine x_vals and log_normal_density into a data frame for ggplot
+# Step 6: Combine x_vals and log_normal_density into a data frame for ggplot
 density_data = data.frame(x_vals = x_vals, log_normal_density = log_normal_density)
 
+# Step 7: Plot the empirical density and the fitted log-normal curve
 ggplot(data.frame(body_mass), aes(x = body_mass)) +
   geom_density(aes(y = after_stat(density)), fill = "steelblue", color = "black") +
   geom_line(data = density_data, aes(x = x_vals, y = log_normal_density), color = "red", linewidth = 1) +
-  labs(title = "Body Mass Distribution with Fitted Log-Normal Curve",
+  labs(title = "Body Mass Distribution with Fitted LogNormal Curve (Using MLE)",
        x = "Body Mass (g)", y = "Density") +
   theme_minimal()
 
+# Step 8: Print the MLE estimates for mu and sigma
+cat("MLE for mu (mean of log body mass):", mu_mle, "\n")
+cat("MLE for sigma (standard deviation of log body mass):", sigma_mle, "\n")
+
 ```
 
-## Limitations of this Model: 
-- While this LogNormal represents skewness, it still does not match the actual data. But this is far better than Normal distribution where skewness is zero.
+### Key Observations: 
+- While Log-Normal represents skewness, it still does not match the actual data. But this is far better than Normal distribution where skewness is zero.
+- A more sophisticated model like gamma distribution would better represent the data that is presented.
+
+# Determination of Sex
+Determination of sex among penguins is often a difficult process where a lot of distress is caused to the penguins. Here, we look to use the available data to determine the sex of the penguins, thereby avoiding any invasive procedures.
+
+Now, we will be looking at the following variables and compare the means of specific variable between two sexes. The t-test that we will be performing will give us an idea if there is a significant difference between the variable for each sex.
+
+- Bill Length
+- Bill Depth
+- Flipper Length
+- Body Mass
+
+Let's perform t-test 
+
+
+
+#### Note: We are assuming variances of two groups are equal
+```{r}
+options(scipen = 999)
+options(width = 100)
+t.test(bill_length_mm ~ sex, data = my.penguins,var.equal=TRUE)
+t.test(bill_depth_mm ~ sex, data = my.penguins,var.equal=TRUE)
+t.test(flipper_length_mm ~ sex, data = my.penguins,var.equal=TRUE)
+t.test(body_mass_g ~ sex, data = my.penguins,var.equal=TRUE)
+```
 
 
 
 
+# Difference in Physical Characterstics of Penguins between Islands
 
+```{r}
+# Perform a one-way ANOVA for each physical characteristic
+# Bill length by island
+anova_bill_length <- aov(bill_length_mm ~ island, data = my.penguins)
+summary(anova_bill_length)
 
+# Bill depth by island
+anova_bill_depth <- aov(bill_depth_mm ~ island, data = my.penguins)
+summary(anova_bill_depth)
 
+# Flipper length by island
+anova_flipper_length <- aov(flipper_length_mm ~ island, data = my.penguins)
+summary(anova_flipper_length)
 
+# Body mass by island
+anova_body_mass <- aov(body_mass_g ~ island, data = my.penguins)
+summary(anova_body_mass)
 
-
-
-
-
-
-
-
-
-
+```
 
 
 
