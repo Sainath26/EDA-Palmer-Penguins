@@ -5,8 +5,7 @@ output: pdf_document
 ---
 # Introduction
 ```{r setup, include=FALSE}
-#Importing libraries and creating a subset
-knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
 library(palmerpenguins)
 library(ggplot2)
 library(dplyr)
@@ -21,16 +20,17 @@ my.penguins = penguins[sample(nrow(penguins), n), ]
 rm(penguins_raw)
 rm(penguins)
 ```
-In this report, we aim to analyse a subset of the famous *Palmer Penguins* data set. The subset data used for analysis has `r n` entries and `r ncol(my.penguins)` different variables describing the penguins. These variables are *`r colnames(my.penguins)` *. Before diving deep into the data, let's try to get a better understanding about the penguins given in the data set by exploring all the variables, one at a time.
 
-### Species and Islands:
-- There are `r length(unique(my.penguins$island))` different islands and these are *`r unique(my.penguins$island)`*.
+In this report, we aim to analyse a subset of the famous Palmer Penguins data set. The subset data used for analysis has `r n` entries and `r ncol(my.penguins)` different variables describing the penguins. These variables are `r colnames(my.penguins)`. Before diving deep into the data, let's try to get a better understanding about the penguins given in the data set by exploring all the variables, one at a time.
+
+## Species and Islands
+- There are `r length(unique(my.penguins$island))` different islands and these are `r unique(my.penguins$island)`.
 - We can observe from the below plot that, Biscoe is the most populated island followed by Dream and Torgersen. 
-- There are `r length(unique(my.penguins$species))` species of penguins and they are *`r unique(my.penguins$species)`* respectively.
+- There are `r length(unique(my.penguins$species))` species of penguins and they are `r unique(my.penguins$species)` respectively.
 - Population of each species in these island is given in the below plot.
 
 
-```{r echo=FALSE, fig.height=3}
+```{r echo=FALSE, fig.height=3, fig.cap=" Penguin distribution by Species and Islands"}
 
 my.penguins %>% 
   count(island, species) %>% 
@@ -39,118 +39,136 @@ my.penguins %>%
   geom_text(aes(label = n), 
             position = position_stack(vjust = 0.5), 
             color = "white") + 
-  labs(title = "Penguin Population by Species and Island", 
+  labs(title = "Penguin Population by Island and Species", 
        x = "Island", 
        y = "Population", 
        fill = "Species") + 
-  theme_minimal() + 
+  scale_fill_manual(values = c("Adelie" = "#640D5F", 
+                               "Gentoo" = "#059212",  
+                               "Chinstrap" = "#FF6600"  
+                               )) +
+  theme_minimal()+
   theme(legend.position = "bottom")
 
 ```
 
-### Bill Length, Bill Depth, Flipper Length and Body Mass:
+## Bill Length, Body Mass, Bill Depth and Flipper Length
 - To get an idea about the features of penguins, we will consider median as a the measure of central tendency because it is not affected if the data is skewed.
-- The penguins have a median bill length of *`r median(my.penguins$bill_length_mm)` mm*.
+- The penguins have a median bill length of `r median(my.penguins$bill_length_mm)` mm.
 - From the below box plots we can observe that Chinstrap Penguins has the highest median Bill length. This is closely followed by Gentoo penguins.
 - Apart from the median bill lengths, a few interesting points can also be observed. Adelie is the most common type of penguin that is present in all three islands. Chinstrap is present only in Dream island, and Gentoo is present only present in Biscoe island.
-- All penguins have a median bill depth of *`r median(my.penguins$bill_depth_mm)` mm*. Median bill depth for each species can be observed from the below box plots.
+- All penguins have a median bill depth of `r median(my.penguins$bill_depth_mm)` mm. Median bill depth for each species can be observed from the below box plots.
 - Gentoo Penguins have the highest median flipper length and Adelie has the overall lowest median flipper length.
-- The penguins have a median body mass of *`r median(my.penguins$body_mass_g)` g*.
-- Gentoo penguins are the heaviest penguins in the dataset. Adelie penguins are the the least heavy of the group and chinstrap penguins are comparable to Adelie as per body mass is concerned.
+- In general, all the penguins have a median body mass of `r median(my.penguins$body_mass_g)` g.
+- Gentoo penguins have the highest body mass in the dataset. Adelie penguins have the the lowest body mass of the group and Chinstrap penguins are comparable to Adelie penguins.
 
 ```{r echo=FALSE,Include=FALSE, figures-side, fig.show="hold", out.width="50%" }
 my.penguins %>% 
-  ggplot(aes(x = island, y = bill_length_mm, color = species)) + 
+  ggplot(aes(color = species, y = bill_length_mm, x = island  )) + 
   geom_boxplot() +
   stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
                position = position_nudge(x = 0)) + 
-  labs(title = "Bill Length Distribution by Species and Island", 
+  labs(title = "Variation of Bill Length across Islands and Species", 
        x = "Island", 
        y = "Bill Length in millimeters", 
        color = "Species") + 
-  theme_minimal()+
+    scale_color_manual(values = c("Adelie" = "#640D5F",  
+                                "Gentoo" = "#059212", 
+                                "Chinstrap" = "#FF6600"  
+                                )) +
+    theme_minimal()+
   theme(legend.position = "none")
 
+
 my.penguins %>% 
-  ggplot(aes(x = island, y = flipper_length_mm, color = species)) + 
+  ggplot(aes(color = species,y = flipper_length_mm,  x = island)) + 
   geom_boxplot() +
   stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
                position = position_nudge(x = 0)) + 
-  labs(title = "Flipper Length Distribution by Species and Island", 
+  labs(title = "Variation of Flipper Length across Islands and Species", 
        x = "Island", 
        y = "Flipper Length in millimeters", 
-       color = "Species") + 
+       color = "Species") +
+  scale_color_manual(values = c("Adelie" = "#640D5F",  
+                                "Gentoo" = "#059212",  
+                                "Chinstrap" = "#FF6600" 
+                                )) +
   theme_minimal()
-
-
 ```
 
 
-```{r echo=FALSE, figures-side2, fig.show="hold", out.width="50%"}
+```{r echo=FALSE, figures-side2, fig.show="hold", out.width="50%", fig.cap="Distribution of Physical Characteristics by Islands and Species"}
  my.penguins %>% 
   ggplot(aes(x = island, y = bill_depth_mm, color = species)) + 
   geom_boxplot() +
   stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
                position = position_dodge(width = 0.75)) + 
-  labs(title = "Bill Depth Distribution by Species and Island", 
+  labs(title = "Variation of Bill Depth across Islands and Species", 
        x = "Island", 
-       y = "Bill Depth in grams", 
+       y = "Bill Depth in millimeters", 
        color = "Species" ) + 
+    scale_color_manual(values = c("Adelie" = "#640D5F", 
+                                "Gentoo" = "#059212",  
+                                "Chinstrap" = "#FF6600" 
+                                )) +
   theme_minimal()+
   theme(legend.position = "none")
 
 my.penguins %>% 
-  ggplot(aes(x = island, y = body_mass_g, color = species)) + 
+  ggplot(aes(color = species,y = body_mass_g, x = island )) + 
   geom_boxplot() +
   stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
                position = position_dodge(width = 0.75)) + 
-  labs(title = "Body Mass Distribution by Species and Island", 
+  labs(title = "Variation of Body Mass across Islands and Species", 
        x = "Island", 
        y = "Body Mass in grams", 
-       color = "Species") + 
+       color = "Species")+
+    scale_color_manual(values = c("Adelie" = "#640D5F", 
+                                "Gentoo" = "#059212",  
+                                "Chinstrap" = "#FF6600"  
+                                )) +
   theme_minimal()
 
 ```
 
-### Year and Sex  : 
-- The data is collected for `r length(unique(my.penguins$year))` years and these are *`r unique(my.penguins$year)`* respectively. There are `r my.penguins%>%summarise(totalFemales = sum(sex == "female"))` female penguins and `r my.penguins%>%summarise(totalMales = sum(sex == "male"))` male penguins in the dataset.
+## Year and Sex
+- The data is collected for `r length(unique(my.penguins$year))` years and these are `r unique(my.penguins$year)` respectively. There are `r my.penguins%>%summarise(totalFemales = sum(sex == "female"))` female penguins and `r my.penguins%>%summarise(totalMales = sum(sex == "male"))` male penguins in the dataset.
 
 # Distribution Fitting and Population Proportion Estimation
 
-Let's take one Body mass of penguins and fit a distribution for proportion estimation. For getting initial impressions of how the data is distributed, let's plot a density plot. Also a lot of things in nature are observed to be falling under a normal distribution. So Let's use a q-q plot to check if body mass can be fitted using a Normal/Gaussian distribution. 
+Let's take body mass of penguins and fit a distribution for proportion estimation. For getting initial impressions of how the data is distributed, let's plot a density plot. Also a lot of things in nature are observed to be falling under a normal distribution. So Let's use a Q-Q plot to check if body mass can be fitted using a Normal distribution. 
 
-```{r echo=FALSE, Distribution_Check,fig.show="hold", out.width="50%"}
-options(scipen = 999)
+```{r echo=FALSE, Distribution_Check,fig.show="hold", out.width="50%", fig.cap="Data Distribution and Q-Q Plot"}
+
 
 ggplot(data = my.penguins, aes(x = body_mass_g)) +
-  geom_density(fill = "red", alpha = 0.7, color = "black") +  # Plot density
-  labs(title = "Density of Body Mass of penguins",
-       x = "Body Mass (grams)",
-       y = "Density") +
-  theme_minimal()
+  geom_density(fill = "#E1BE6A", alpha = 0.7, color = "black") +  
+  labs(
+       y = "Density",
+       x = "Body Mass in grams"
+       ) 
 
 qqnorm(my.penguins$body_mass_g)
-qqline(my.penguins$body_mass_g,col="red")
+qqline(my.penguins$body_mass_g)
 ```
 
-Two major things can be observed the above plots.
+Two major things can be observed from the above plots.
 
-- q-q plot shows that fitting a normal distribution might not be the best choice for good parameter estimations.
+- Q-Q plot shows that fitting a normal distribution might not be the best choice for good parameter estimations.
 - Distribution of body mass seems to right skewed.
 
-Now we have to look for some other distribution to fit the data. The body mass is a positive value and the data is right skewed, *Log-Normal Distribution* might be a good choice to fit the data.
+Now we have to look for some other distribution to fit the data. The body mass is a positive value and the data is right skewed, Log-Normal Distribution might be a good choice to fit the data.
 
-so let's fit Log-Normal Distribution to our data. 
+## Fitting a Distribution
 
-### Fitting the Data to a Log-Normal Distribution
 Probability density function for a Log-Normal distribution is given by
 \begin{align*}
 f(x) = \frac{1}{x \sigma\sqrt{2 \pi}} e^{\left[ - \frac{(ln(x) - \mu)^2}{2 \sigma^2} \right]}
    \end{align*}
    
-- $\mu$ is the mean of the normal distribution. 
-- $\sigma$ is the standard deviation of the normal distribution. 
-- $n$ is equal to 200 in our case.
+- Mean is given by $\mu$. 
+- Standard deviation is given by $\sigma$
+- $n$ is equal to 200.
 
 Likelihood function:
 \begin{align*}
@@ -166,113 +184,284 @@ L(\mu, \sigma | x_n) &= \frac{1}{(2\pi)^{\frac{n}{2}}\frac{1}{(\sigma^{2})^{\fra
    
 Where (1) is the log likelihood function
 
-Now partially differentiating (1) we find equations for $\mu$ and $\sigma$.
+Now, by partially differentiating (1), we find equations for $\mu$ and $\sigma$.
 
 - To estimate parameter $\mu$ (Mean) we differentiate the log-likelihood with respect to $\mu$
+
 \begin{align*}
 \frac{\partial}{\partial \mu} lnL(\mu, \sigma^2|x_n) = \frac{1}{\sigma^2} \sum_{i=1}^{n} (ln(x_i) - \mu)\\
 \frac{\partial}{\partial \mu} lnL(\mu, \sigma^2) = 0\\
 \text{Solving this equation we get,}\\
-\text{mean: } & \hat{\mu} = \frac{1}{n} \sum_{i=1}^{n} \ln(x_i)
+\text{Mean is given by, } & \hat{\mu} = \frac{1}{n} \sum_{i=1}^{n} \ln(x_i)
 \end{align*}
--To estimate parameter for $\sigma^2$ (Variance) we differentiate the log-likelihood with respect to $\sigma^2$
+
+- To estimate parameter for $\sigma^2$ (Variance) we differentiate the log-likelihood with respect to $\sigma^2$
+
 \begin{align*}
 \frac{\partial}{\partial \sigma^2} lnL(\mu, \sigma^2 |x_n) = -\frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \sum_{i=1}^{n} (ln(x_i) - \mu)^2\\
 \text{by solving this equation, we get}\\
 \hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^{n} (\ln(x_i) - \hat \mu)^2\\
-\text{Standard deviation: } & \hat{\sigma}= \sqrt{\frac{1}{n} \sum_{i=1}^{n} (\ln(x_i) - \hat{\mu})^{2}}\\
+\text{Standard Deviation is given by, } & \hat{\sigma}= \sqrt{\frac{1}{n} \sum_{i=1}^{n} (\ln(x_i) - \hat{\mu})^{2}}\\
 \end{align*}
 
-```{r echo=FALSE, Distribution_fit,fig.show="hold", out.width="50%"}
-body_mass = my.penguins$body_mass_g  # Original data
+```{r echo=FALSE, Distribution_fit,fig.align="center", out.width="50%", fig.cap="Body Mass Distribution with Fitted Log-Normal Curve"}
+body_mass = my.penguins$body_mass_g
 
-# Step 1: Log-transform the body mass
-log_body_mass = log(body_mass)
+logbody_mass = log(body_mass)
 
-# Step 2: Compute MLE for mu (mean of the log-transformed data)
-n = length(log_body_mass)  # Number of observations
-mu_mle = sum(log_body_mass) / n  # MLE for mu
+n = length(logbody_mass) 
+muMLE = sum(logbody_mass) / n  # MLE for mu
 
-# Step 3: Compute MLE for sigma^2 (variance of the log-transformed data)
-sigma2_mle = sum((log_body_mass - mu_mle)^2) / n  # MLE for sigma^2
-sigma_mle = sqrt(sigma2_mle)  # Standard deviation (square root of variance)
 
-# Step 4: Create a sequence of x values for plotting the fitted curve
+sigma2MLE = sum((logbody_mass - muMLE)^2) / n  # MLE for sigma^2
+sigmaMLE = sqrt(sigma2MLE)  # Standard deviation (square root of variance)
+
+
 x_vals = seq(min(body_mass), max(body_mass), length.out = 100)
 
-# Step 5: Get the log-normal density curve using MLE mu and sigma
-log_normal_density = dlnorm(x_vals, meanlog = mu_mle, sdlog = sigma_mle)
 
-# Step 6: Combine x_vals and log_normal_density into a data frame for ggplot
-density_data = data.frame(x_vals = x_vals, log_normal_density = log_normal_density)
+logNormal_density = dlnorm(x_vals, meanlog = muMLE, sdlog = sigmaMLE)
 
-# Step 7: Plot the empirical density and the fitted log-normal curve
+
+densityData = data.frame(x_vals = x_vals, logNormal_density = logNormal_density)
+
 ggplot(data.frame(body_mass), aes(x = body_mass)) +
-  geom_density(aes(y = after_stat(density)), fill = "steelblue", color = "black") +
-  geom_line(data = density_data, aes(x = x_vals, y = log_normal_density), color = "red", linewidth = 1) +
-  labs(title = "Body Mass Distribution with Fitted LogNormal Curve (Using MLE)",
-       x = "Body Mass (g)", y = "Density") +
-  theme_minimal()
-
-# Step 8: Print the MLE estimates for mu and sigma
-cat("MLE for mu (mean of log body mass):", mu_mle, "\n")
-cat("MLE for sigma (standard deviation of log body mass):", sigma_mle, "\n")
-
+  geom_density(aes(y = after_stat(density)), fill = "#E1BE6A", color = "black") +
+  geom_line(data = densityData, aes(x = x_vals, y = logNormal_density), color = "#40B0A6", linewidth = 1) +
+  labs(title = "Body Mass Distribution with Fitted LogNormal Curve Using MLE",
+       x = "Body Mass (g)", y = "Density") 
 ```
 
-### Key Observations: 
-- While Log-Normal represents skewness, it still does not match the actual data. But this is far better than Normal distribution where skewness is zero.
-- A more sophisticated model like gamma distribution would better represent the data that is presented.
+- MLE for $\mu$ (mean of log body mass): `r muMLE`
+- MLE for $\sigma$ (standard deviation of log body mass): `r sigmaMLE` 
+
+## Observations
+
+- The fitted distribution (Figure 4) approximately matches the actual data and this Log-Normal distribution represents skewness.
+- While Log-Normal represents skewness, it is still not equal to actual data. But this is far better than normal distribution where skewness is zero.
+- A more sophisticated model would better represent the data that is presented.
+
 
 # Determination of Sex
 Determination of sex among penguins is often a difficult process where a lot of distress is caused to the penguins. Here, we look to use the available data to determine the sex of the penguins, thereby avoiding any invasive procedures.
 
-Now, we will be looking at the following variables and compare the means of specific variable between two sexes. The t-test that we will be performing will give us an idea if there is a significant difference between the variable for each sex.
+```{r echo=FALSE,Include=FALSE, Sex-figure, fig.show="hold", out.width="50%" }
+my.penguins %>% 
+  ggplot(aes(color = sex, y = bill_length_mm, x = sex )) + 
+  geom_boxplot() +
+  stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
+               position = position_nudge(x = 0)) + 
+  labs(title = "Variation of Bill Length across Sex", 
+       x = "Sex", 
+       y = "Bill Length in millimeters", 
+       color = "Sex") + 
+  scale_color_manual(values = c("male" = "steelblue",  
+                                "female" = "purple")) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
-- Bill Length
-- Bill Depth
-- Flipper Length
-- Body Mass
+# Flipper Length by Gender 
+my.penguins %>% 
+  ggplot(aes(color = sex, y = flipper_length_mm, x = sex)) + 
+  geom_boxplot() +
+  stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
+               position = position_nudge(x = 0)) + 
+  labs(title = "Variation of Flipper Length across Sex", 
+       x = "Sex", 
+       y = "Flipper Length in millimeters", 
+       color = "Sex") +
+  scale_color_manual(values = c("male" = "steelblue",  
+                                "female" = "purple")) +
+  theme_minimal()
+```
 
-Let's perform t-test 
+```{r echo=FALSE, Sex-figure2, fig.show="hold", out.width="50%", fig.cap="Distribution of Physical Characteristics by Sex"}
+my.penguins %>% 
+  ggplot(aes(x = sex, y = bill_depth_mm, color = sex)) + 
+  geom_boxplot() +
+  stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
+               position = position_dodge(width = 0.75)) + 
+  labs(title = "Variation of Bill Depth across Sex", 
+       x = "Island", 
+       y = "Bill Depth in millimeters", 
+       color = "Sex") + 
+  scale_color_manual(values = c("male" = "steelblue",  
+                                "female" = "purple")) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
 
+my.penguins %>% 
+  ggplot(aes(color = sex, y = body_mass_g, x = sex)) + 
+  geom_boxplot() +
+  stat_summary(fun = median, geom = "label", aes(label = round(after_stat(y), 1)), 
+               position = position_dodge(width = 0.75)) + 
+  labs(title = "Variation of Body Mass across across Sex", 
+       x = "Sex", 
+       y = "Body Mass in grams", 
+       color = "Sex") +
+  scale_color_manual(values = c("male" = "steelblue",  
+                                "female" = "purple")) +
+  theme_minimal()
 
-#### Note: We are assuming variances of two groups are equal
-```{r}
-options(scipen = 999)
-options(width = 100)
-t.test(bill_length_mm ~ sex, data = my.penguins,var.equal=TRUE)
-t.test(bill_depth_mm ~ sex, data = my.penguins,var.equal=TRUE)
-t.test(flipper_length_mm ~ sex, data = my.penguins,var.equal=TRUE)
-t.test(body_mass_g ~ sex, data = my.penguins,var.equal=TRUE)
 ```
 
 
+The above figure gives us a rough idea of how the data is distributed. But we need a mathematical way to determine if the differences are significant.
+
+This task can be performed using the concept of hypothesis testing where we will assess physical characteristics and compare the means of each physical characteristics between two sexes. 
+
+For achieving this task, we need to frame our null and alternate hypothesis.
+
+We can consider
+
+- $H_0$: No difference between males and females for the considered variable
+- $H_1$: Significant difference between males and females is present for the considered variable
+
+When we use a t-test to check our hypothesis we will get something called as a P-value. If it is less than 0.05 then we can reject $H_0$ and say that there is significant difference between males and females for the given variable.
+Let's use the `t.test` function to test our hypothesis.
+
+Note: We are assuming variances of two groups are equal
+
+## Hypothesis Testing
+
+```{r}
+bill_length_t_test = t.test(bill_length_mm ~ sex, data = my.penguins,var.equal=TRUE)
+bill_depth_t_test = t.test(bill_depth_mm ~ sex, data = my.penguins,var.equal=TRUE)
+flipper_length_t_test = t.test(flipper_length_mm ~ sex, data = my.penguins,var.equal=TRUE)
+body_mass_t_test = t.test(body_mass_g ~ sex, data = my.penguins,var.equal=TRUE)
+```
+```{r include=FALSE}
+formatted_bl_p_value = format(bill_length_t_test$p.value, digits = 8)
+formatted_bd_p_value = format(bill_depth_t_test$p.value, digits = 8)
+formatted_fl_p_value = format(flipper_length_t_test$p.value, digits = 8)
+formatted_bm_p_value = format(body_mass_t_test$p.value, digits = 8)
+```
+
+- **Bill Length** 
+
+    P value : `r formatted_bl_p_value ` 
+    
+    Mean of Female :  `r bill_length_t_test$estimate[1]` 
+    
+    Mean of Male : `r bill_length_t_test$estimate[2]` 
+    
+    T value :  `r bill_length_t_test$statistic` 
+    
+    Degree of Freedom: `r bill_length_t_test$parameter` 
+    
+    The p value is smaller than 0.05. So, there is evidence that the bill length for female penguins is smaller than the average male penguin.
+  
+- **Bill Depth**
+    
+    P value : `r formatted_bd_p_value` 
+    
+    Mean of Female : `r bill_depth_t_test$estimate[1]` 
+    
+    Mean of Male :`r bill_depth_t_test$estimate[2]` 
+    
+    T value : `r bill_depth_t_test$statistic` 
+    
+    Degree of Freedom:`r bill_depth_t_test$parameter` 
+    
+    The p value is smaller than 0.05. So, there is evidence that a female penguins' bill depth will be smaller than an average male penguin.
+    
+- **Flipper Length**
+
+    P value : `r formatted_fl_p_value ` 
+    
+    Mean of Female :  `r flipper_length_t_test$estimate[1]` 
+    
+    Mean of Male : `r flipper_length_t_test$estimate[2]` 
+    
+    T value :  `r flipper_length_t_test$statistic` 
+    
+    Degree of Freedom: `r flipper_length_t_test$parameter` 
+    
+    The p value is smaller than 0.05. So, there is evidence that the flipper length for female penguins is smaller than the average male penguin.
+  
+
+- **Body Mass**
+    
+    P value : `r formatted_bm_p_value ` 
+    
+    Mean of Female : `r body_mass_t_test$estimate[1]` 
+    
+    Mean of Male :`r body_mass_t_test$estimate[2]` 
+    
+    T value : `r body_mass_t_test$statistic` 
+
+    The p value is smaller than 0.05. So, there is evidence that female penguins will weigh much lesser than an average male penguin.
+
+
+## Conclusion
+
+So the scientists can take the above calculated means of female/male penguins, create a threshold and then determine the sex based on the threshold set. In this way, no invasive procedure is needed. More accuracy can be achieved if we use more number of observations and a good machine learning model. One thing to note is that there will always be outliers and we should always consider that in our analysis.
 
 
 # Difference in Physical Characterstics of Penguins between Islands
 
-```{r}
-# Perform a one-way ANOVA for each physical characteristic
-# Bill length by island
-anova_bill_length <- aov(bill_length_mm ~ island, data = my.penguins)
+We will now investigate the difference in physical characteristics of penguins between `r unique(my.penguins$species)` islands.
+
+From Figure 2 we can observe that physical characteristics of penguins across islands is different, but to be sure let's calculate if the means of the below variables differ significantly between islands or if they are similar enough that any observed difference are just due to random change. 
+
+- Bill Length
+- Bill Depth
+- Flipper Length
+- Body Mass 
+
+We can use the regular t-test here, but there is a slight problem, we will need to perform 3 individual t-tests for each variable as we need to compare penguins between `r length(unique(my.penguins$island))` islands. This will lead to rise in the risk of finding false positives or Type 1 errors.
+
+This can be avoided if we use a method called Analysis of Variance or ANOVA. ANOVA enables us to compare means of two or more groups. We can then determine if the effect is due to random chance or if they mean something. Since we would be comparing each variable with island, we would be using *One Way ANOVA*.
+This is achieved by analyzing difference between group means and determining if the values are statistically significant.
+
+## One Way Analysis of Variances (ANOVA)
+
+Let's consider
+
+- $H_0$: Mean of the variable that we are considering is same for penguins across all islands.
+- $H_1$: At least one island has significant difference in the variable that we are considering.
+
+We will be using `aov` function to compute the P value and F value. P value is the probability of observing the result assuming Null Hypothesis is true. F value measures the ratio betweeen-group variance and within-group variance.
+
+If p value is less than the statistical threshold value (0.05), we can reject the null hypothesis and say that there is significant difference between variables(e.g body mass) between penguins of each Islands.
+
+- **Bill Length**:  
+
+```{r echo=FALSE}
+anova_bill_length = aov(bill_length_mm ~ island, data = my.penguins)
 summary(anova_bill_length)
-
-# Bill depth by island
-anova_bill_depth <- aov(bill_depth_mm ~ island, data = my.penguins)
-summary(anova_bill_depth)
-
-# Flipper length by island
-anova_flipper_length <- aov(flipper_length_mm ~ island, data = my.penguins)
-summary(anova_flipper_length)
-
-# Body mass by island
-anova_body_mass <- aov(body_mass_g ~ island, data = my.penguins)
-summary(anova_body_mass)
-
 ```
 
+Bill length is different for penguins from different islands. Since P value is less than the threshold, we can reject the null hypothesis and go with alternate hypothesis.
 
+- **Bill Depth**:  
+```{r echo=FALSE}
+anova_bill_depth = aov(bill_depth_mm ~ island, data = my.penguins)
+summary(anova_bill_depth)
+```
+    
+Bill depth is different for penguins from different islands. Since P value is less than the threshold, we can reject the null hypothesis and go with alternate hypothesis.
+
+
+- **Flipper Length**:  
+```{r echo=FALSE}
+anova_flipper_length = aov(flipper_length_mm ~ island, data = my.penguins)
+summary(anova_flipper_length)
+```
+
+Flipper length is different for penguins from different islands. Since P value is less than the threshold, we can reject the null hypothesis and go with alternate hypothesis.
+
+- **Body Mass**:  
+```{r echo=FALSE}
+anova_body_mass = aov(body_mass_g ~ island, data = my.penguins)
+summary(anova_body_mass)
+```
+
+Body mass is different for penguins from different islands. Since P value is less than the threshold, we can reject the null hypothesis and go with alternate hypothesis.
+
+
+## Conclusion
+From the One way ANOVA results, we can say that there are significant differences in physical characteristics (bill length, bill depth, flipper length, and body mass) among penguins from the 3 islands. So the island of origin has an impact on the physical characteristics of penguins.
 
 
