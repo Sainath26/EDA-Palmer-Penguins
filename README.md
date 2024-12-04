@@ -9,7 +9,7 @@ This project analyzes the Palmer Penguins dataset to study penguin species, isla
   - Statistical Analysis:
 - Fit a Log-Normal distribution to body mass using Maximum Likelihood Estimation (MLE).
     - Perform t-tests to compare physical attributes between sexes.
-    - Conduct ANOVA to evaluate differences across islands.
+- Conduct ANOVA to evaluate differences across islands.
   
 ## Key Findings
 Chinstrap penguins have the longest bills; Gentoo penguins are the heaviest.
