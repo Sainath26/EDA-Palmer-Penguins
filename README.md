@@ -23,7 +23,7 @@ Physical characteristics vary significantly among islands (p < 0.05).
       - bash
       - Copy code
     `git clone https://github.com/username/palmer-penguins-analysis.git`
-  - Open and knit palmer_penguins_analysis.Rmd in RStudio.
+  - Open and click knit.
 
 # Limitations
 Small sample size and class imbalance limit generalizability. Advanced models may improve accuracy.
