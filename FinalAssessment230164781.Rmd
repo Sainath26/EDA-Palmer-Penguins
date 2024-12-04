@@ -1,6 +1,6 @@
 ---
 title: "Palmer Penguins Analysis"
-author: "Harish Sainath Sai Prasath (230164781)"
+author: "Harish Sainath"
 output: pdf_document
 ---
 # Introduction
